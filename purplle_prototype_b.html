@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Purplle Revamp — Prototype B</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#c9c9c9;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;font-family:'Inter',sans-serif;padding:28px 16px}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.lbl{color:#777;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.phone{width:390px;height:844px;background:#fff;overflow:hidden;position:relative;border-radius:44px;box-shadow:0 0 0 10px #1c1c1e,0 0 0 12px #3a3a3c,0 28px 70px rgba(0,0,0,.45)}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;border-radius:44px;overflow:hidden}
+.screen.active{display:flex}
+.scroll{overflow-y:auto;flex:1}
+.scroll::-webkit-scrollbar{display:none}
+.scroll{-ms-overflow-style:none;scrollbar-width:none}
+
+.notch{height:44px;background:#3B0764;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.npill{width:126px;height:30px;background:#000;border-radius:20px}
+
+/* Toast */
+.toast{position:absolute;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:50px;font-size:12.5px;font-weight:600;opacity:0;transition:all .28s ease;z-index:9000;white-space:nowrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Bottom nav */
+.bnav{height:70px;background:#fff;border-top:1px solid #efefef;display:flex;align-items:center;justify-content:space-around;flex-shrink:0;padding-bottom:6px}
+.nb{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border:none;background:none;position:relative}
+.nb svg{width:22px;height:22px;stroke-width:1.8;fill:none}
+.nb span{font-size:10px}
+.nb.on svg{stroke:#7E22CE}.nb.on span{color:#7E22CE;font-weight:700}
+.nb:not(.on) svg{stroke:#b0b0b0}.nb:not(.on) span{color:#b0b0b0;font-weight:400}
+/* Cart badge on nav */
+.cart-badge{position:absolute;top:0;right:2px;background:#EC4899;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;display:none}
+.cart-badge.visible{display:flex}
+
+/* Headers */
+.hp{height:56px;background:#7E22CE;padding:0 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hw{height:56px;background:#fff;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;flex-shrink:0}
+.logo{font-weight:800;color:#fff;font-size:22px;font-family:Georgia,serif;letter-spacing:-1px}
+.ic{cursor:pointer;display:flex;align-items:center;position:relative}
+.ic svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.8}
+.icd svg{stroke:#1e1b2e}
+.ht{font-weight:700;color:#fff;font-size:15px}
+.htd{font-weight:700;color:#1e1b2e;font-size:15px}
+/* Cart badge on header icon */
+.hbadge{position:absolute;top:-4px;right:-5px;background:#EC4899;color:#fff;border-radius:50%;width:15px;height:15px;font-size:8px;font-weight:800;display:none;align-items:center;justify-content:center}
+.hbadge.v{display:flex}
+
+/* Search */
+.srch{height:44px;background:#f8f8f8;border:1.5px solid #ebebeb;border-radius:22px;padding:0 14px;display:flex;align-items:center;gap:8px;cursor:text}
+.srch svg{width:16px;height:16px;stroke:#b0b0b0;stroke-width:2;fill:none;flex-shrink:0}
+.srch span{font-size:13px;color:#b0b0b0}
+
+/* Product card */
+.pc{background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.07);cursor:pointer;transition:box-shadow .2s}
+.pc:hover{box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.piw{position:relative;overflow:hidden;background:#f5f5f5}
+.piw img{width:100%;height:130px;object-fit:cover;display:block;transition:transform .3s}
+.pc:hover .piw img{transform:scale(1.04)}
+.pbadge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;color:#fff;letter-spacing:.3px;z-index:2;text-transform:uppercase}
+.bpink{background:#EC4899}.bpurp{background:#7E22CE}
+.phrt{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.phrt svg{width:14px;height:14px;stroke:#e879a8;stroke-width:2;fill:none;transition:fill .2s}
+.phrt.liked svg{fill:#EC4899;stroke:#EC4899}
+.pb{padding:10px}
+.prat{display:flex;align-items:center;gap:3px;margin-bottom:4px}
+.prat .st{color:#f59e0b;font-size:12px}
+.prat span{font-size:11px;color:#9ca3af}
+.pnm{font-weight:700;font-size:13px;color:#1e1b2e;line-height:1.35;margin-bottom:3px;min-height:33px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pdsc{font-size:11px;color:#b0b0b0;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppr{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.ppr .now{color:#7E22CE;font-weight:800;font-size:14px}
+.ppr .old{color:#c8c8c8;font-size:11px;text-decoration:line-through}
+.ppr .off{color:#EC4899;font-size:10px;font-weight:700}
+/* Add to cart button — two states */
+.badd{border:none;border-radius:8px;padding:9px 6px;font-size:11px;font-weight:700;cursor:pointer;width:100%;transition:all .2s}
+.badd.add-state{background:#EC4899;color:#fff}
+.badd.add-state:active{background:#db2777}
+.badd.added-state{background:#f3f0ff;color:#7E22CE;border:1.5px solid #7E22CE}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sht{font-weight:800;font-size:15px;color:#1e1b2e}
+.shv{font-size:13px;color:#7E22CE;font-weight:600;cursor:pointer}
+
+.bplg{background:#EC4899;color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:background .15s}
+.bplg:active{background:#db2777}
+.bout{background:#fff;color:#7E22CE;border:2px solid #7E22CE;border-radius:14px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+
+.pill{display:inline-flex;align-items:center;background:#f3f0ff;color:#7E22CE;border-radius:50px;padding:4px 10px;font-size:11px;font-weight:600}
+
+/* Quiz */
+.pg{display:flex;gap:6px;margin-bottom:6px}
+.ps{height:6px;flex:1;border-radius:4px;transition:background .3s}
+.psd{background:#7E22CE}.psp{background:#e9d5ff}
+.qo{width:100%;border-radius:13px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border:2px solid;transition:all .15s}
+.qo.sel{background:#7E22CE;border-color:#7E22CE}
+.qo.uns{background:#fff;border-color:#ede9fe}
+.qo.uns:hover{border-color:#7E22CE}
+.qrd{width:20px;height:20px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qo.sel .qrd{border-color:#fff;background:#fff}
+.qo.uns .qrd{border-color:#c4b5fd}
+.qdot{width:10px;height:10px;border-radius:50%;background:#7E22CE}
+
+/* Cart item row */
+.cr{display:flex;gap:12px;background:#fff;border-radius:14px;border:1px solid #f0f0f0;padding:12px;box-shadow:0 1px 5px rgba(0,0,0,.05);animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cr img{width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;background:#f5f5f5}
+.qc{display:flex;align-items:center;border:2px solid #7E22CE;border-radius:9px;overflow:hidden}
+.qb{padding:5px 10px;cursor:pointer;background:#fff;border:none;display:flex;align-items:center}
+.qb:hover{background:#faf5ff}
+.qb svg{width:13px;height:13px;stroke:#7E22CE;stroke-width:2.5;fill:none}
+.qn{padding:0 10px;font-size:13px;font-weight:700;color:#1e1b2e;user-select:none;min-width:20px;text-align:center}
+
+/* Empty cart */
+.empty-cart{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+
+/* Checkout */
+.pwr{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .15s}
+.pwr:hover{background:#faf5ff}
+.pr{width:20px;height:20px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.pr.on{border-color:#7E22CE;background:#7E22CE}
+.pr.off{border-color:#d1d5db}
+
+/* Filter */
+.mbg{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;border-radius:44px;overflow:hidden}
+.mbg.open{display:flex}
+.ms{width:100%;background:#fff;border-radius:24px 24px 0 0;padding:20px 18px 28px;animation:sup .28s ease-out}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.fc{padding:10px 8px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;border:none;transition:all .15s}
+.fc.on{background:#7E22CE;color:#fff}
+.fc.off{background:#f5f0ff;color:#7E22CE}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.bfr{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.bck{width:18px;height:18px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;font-size:9px;color:#fff;font-weight:800}
+.ibox{background:#faf5ff;border-radius:12px;padding:14px;border:1.5px solid #e9d5ff}
+.step-dot{width:24px;height:24px;background:#7E22CE;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lbl">Purplle Revamp · Prototype B</div>
+  <div class="phone">
+    <div class="toast" id="toast"></div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ HOME ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen active" id="s-home">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hp">
+        <div class="logo">purplle</div>
+        <div style="display:flex;gap:16px">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="ic" onclick="goTo('cart')" style="position:relative">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="hbadge" id="hbadge-home"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll" style="padding:16px 16px 0">
+        <div class="srch" onclick="goTo('products')" style="margin-bottom:18px">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search skincare, makeup &amp; more…</span>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#7E22CE,#c026d3 55%,#EC4899);border-radius:18px;padding:20px;margin-bottom:22px">
+          <div style="color:#fff;font-weight:800;font-size:17px;margin-bottom:5px">✨ Find Your Perfect Match</div>
+          <div style="color:rgba(255,255,255,.88);font-size:13px;line-height:1.55;margin-bottom:14px">Take our quick 3-step skin quiz and get personalised product picks.</div>
+          <button onclick="goTo('quiz')" style="width:100%;background:#fff;color:#7E22CE;border:none;border-radius:50px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15)">Start Skin Quiz →</button>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div class="sh">
+            <span class="sht">Trending Now 🔥</span>
+            <span class="shv" onclick="goTo('products')">View All</span>
+          </div>
+          <div class="g2">
+
+            <div class="pc" onclick="goTo('detail')">
+              <div class="piw">
+                <span class="pbadge bpurp">30% OFF</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Vitamin C Cleanser"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.3</span></div>
+                <div class="pnm">Vitamin C Cleanser</div>
+                <div class="ppr"><span class="now">₹349</span><span class="old">₹499</span></div>
+                <button class="badd add-state" id="btn-h-0" onclick="addToCart(event,'Vitamin C Cleanser',349,499,'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=300','Gentle daily cleanser','btn-h-0','btn-p-2')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <span class="pbadge bpurp">25% OFF</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Retinol Night Cream"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.6</span></div>
+                <div class="pnm">Retinol Night Cream</div>
+                <div class="ppr"><span class="now">₹749</span><span class="old">₹999</span></div>
+                <button class="badd add-state" id="btn-h-1" onclick="addToCart(event,'Retinol Night Cream',749,999,'https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=300','Anti-aging &amp; skin renewal','btn-h-1','btn-p-1')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <span class="pbadge bpurp">31% OFF</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Glycolic Acid Toner"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.4</span></div>
+                <div class="pnm">Glycolic Acid Toner</div>
+                <div class="ppr"><span class="now">₹449</span><span class="old">₹649</span></div>
+                <button class="badd add-state" id="btn-h-2" onclick="addToCart(event,'Glycolic Acid Toner',449,649,'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=300','Exfoliates &amp; smooths skin','btn-h-2','btn-p-4')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <span class="pbadge bpurp">31% OFF</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/6621472/pexels-photo-6621472.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Ceramide Repair Cream"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.7</span></div>
+                <div class="pnm">Ceramide Repair Cream</div>
+                <div class="ppr"><span class="now">₹899</span><span class="old">₹1,299</span></div>
+                <button class="badd add-state" id="btn-h-3" onclick="addToCart(event,'Ceramide Repair Cream',899,1299,'https://images.pexels.com/photos/6621472/pexels-photo-6621472.jpeg?auto=compress&cs=tinysrgb&w=300','Repairs &amp; strengthens barrier','btn-h-3','btn-p-5')">Add to Cart</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+
+      <div class="bnav">
+        <button class="nb on"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+        <button class="nb" onclick="goTo('products')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></button>
+        <button class="nb"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Wishlist</span></button>
+        <button class="nb" onclick="goTo('cart')">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-badge" id="nav-badge-home"></span>
+          <span>Cart</span>
+        </button>
+        <button class="nb"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+      </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ QUIZ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen" id="s-quiz">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hw">
+        <div class="ic icd" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="htd">Find Your Match</div>
+        <div onclick="goTo('products')" style="color:#b0b0b0;font-size:13px;cursor:pointer;font-weight:500">Skip</div>
+      </div>
+      <div style="padding:20px 18px;flex:1;display:flex;flex-direction:column">
+        <div style="margin-bottom:20px">
+          <div class="pg" id="qprog"></div>
+          <div id="qstlbl" style="color:#b0b0b0;font-size:12px;font-weight:500">Step 1 of 3</div>
+        </div>
+        <div style="margin-bottom:22px">
+          <h1 id="qttl" style="font-weight:800;font-size:20px;color:#1e1b2e;line-height:1.3;margin-bottom:6px"></h1>
+          <p id="qsub" style="color:#9ca3af;font-size:13px;line-height:1.55"></p>
+        </div>
+        <div id="qopts" style="flex:1"></div>
+        <button id="qnxt" onclick="qnext()" style="width:100%;height:52px;border-radius:14px;font-weight:700;font-size:15px;border:none;cursor:not-allowed;background:#f3f4f6;color:#c8c8c8;transition:all .2s;margin-top:8px" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PRODUCTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen" id="s-products">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hp">
+        <div class="ic" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ht">Skincare Products</div>
+        <div class="ic" onclick="goTo('cart')" style="position:relative">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="hbadge" id="hbadge-products"></span>
+        </div>
+      </div>
+      <div style="padding:14px 16px 0;display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <div class="srch" style="margin-bottom:12px">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search products…</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button onclick="openF()" style="display:flex;align-items:center;gap:6px;background:#7E22CE;color:#fff;border:none;border-radius:50px;padding:8px 16px;font-weight:600;font-size:12.5px;cursor:pointer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:14px;height:14px"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            Filter
+          </button>
+          <button id="srtbtn" onclick="cycleSort()" style="display:flex;align-items:center;gap:5px;background:#fff;color:#1e1b2e;border:1.5px solid #e5e7eb;border-radius:50px;padding:8px 14px;font-weight:500;font-size:12px;cursor:pointer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" style="width:13px;height:13px"><path d="M3 9l4-4 4 4M7 5v14M21 15l-4 4-4-4M17 19V5"/></svg>
+            <span id="srttxt">Sort: Relevance</span>
+          </button>
+        </div>
+        <div style="color:#b0b0b0;font-size:12px;font-weight:500;margin-bottom:12px">6 products found</div>
+        <div class="scroll" style="flex:1;padding-bottom:16px">
+          <div class="g2">
+
+            <!-- Product 0: Niacinamide (default in cart) -->
+            <div class="pc" onclick="goTo('detail')">
+              <div class="piw">
+                <span class="pbadge bpink">BEST SELLER</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Niacinamide Serum"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.5 (2,847)</span></div>
+                <div class="pnm">Niacinamide 10% Serum</div>
+                <div class="pdsc">Reduces pores &amp; blemishes</div>
+                <div class="ppr"><span class="now">₹419</span><span class="old">₹599</span><span class="off">30% off</span></div>
+                <!-- Default product already in cart — shows "Added" on load -->
+                <button class="badd added-state" id="btn-p-0" onclick="addToCart(event,'Niacinamide 10% Serum',419,599,'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=300','Reduces pores &amp; blemishes','btn-p-0')">✓ In Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <span class="pbadge bpink">NEW</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Retinol Night Cream"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.6 (1,923)</span></div>
+                <div class="pnm">Retinol Night Cream</div>
+                <div class="pdsc">Anti-aging &amp; skin renewal</div>
+                <div class="ppr"><span class="now">₹749</span><span class="old">₹999</span><span class="off">25% off</span></div>
+                <button class="badd add-state" id="btn-p-1" onclick="addToCart(event,'Retinol Night Cream',749,999,'https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=300','Anti-aging &amp; skin renewal','btn-p-1','btn-h-1')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <span class="pbadge bpink">TRENDING</span>
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Vitamin C Serum"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.3 (3,241)</span></div>
+                <div class="pnm">Vitamin C Brightening Serum</div>
+                <div class="pdsc">Fades dark spots, adds glow</div>
+                <div class="ppr"><span class="now">₹349</span><span class="old">₹499</span><span class="off">30% off</span></div>
+                <button class="badd add-state" id="btn-p-2" onclick="addToCart(event,'Vitamin C Brightening Serum',349,499,'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=300','Fades dark spots, adds glow','btn-p-2','btn-h-0')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/6621342/pexels-photo-6621342.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Hyaluronic Moisturizer"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.7 (1,654)</span></div>
+                <div class="pnm">Hyaluronic Acid Moisturizer</div>
+                <div class="pdsc">Deep hydration for 24 hrs</div>
+                <div class="ppr"><span class="now">₹629</span><span class="old">₹899</span><span class="off">30% off</span></div>
+                <button class="badd add-state" id="btn-p-3" onclick="addToCart(event,'Hyaluronic Acid Moisturizer',629,899,'https://images.pexels.com/photos/6621342/pexels-photo-6621342.jpeg?auto=compress&cs=tinysrgb&w=300','Deep hydration for 24 hrs','btn-p-3')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Salicylic Face Wash"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.4 (2,156)</span></div>
+                <div class="pnm">Salicylic Acid Face Wash</div>
+                <div class="pdsc">Controls oil &amp; clears acne</div>
+                <div class="ppr"><span class="now">₹299</span><span class="old">₹399</span><span class="off">25% off</span></div>
+                <button class="badd add-state" id="btn-p-4" onclick="addToCart(event,'Salicylic Acid Face Wash',299,399,'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=300','Controls oil &amp; clears acne','btn-p-4','btn-h-2')">Add to Cart</button>
+              </div>
+            </div>
+
+            <div class="pc">
+              <div class="piw">
+                <div class="phrt" onclick="hrt(this,event)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <img src="https://images.pexels.com/photos/6621472/pexels-photo-6621472.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Peptide Eye Cream"/>
+              </div>
+              <div class="pb">
+                <div class="prat"><span class="st">★</span><span>4.5 (987)</span></div>
+                <div class="pnm">Peptide Eye Cream</div>
+                <div class="pdsc">Reduces dark circles &amp; puffiness</div>
+                <div class="ppr"><span class="now">₹549</span><span class="old">₹799</span><span class="off">31% off</span></div>
+                <button class="badd add-state" id="btn-p-5" onclick="addToCart(event,'Peptide Eye Cream',549,799,'https://images.pexels.com/photos/6621472/pexels-photo-6621472.jpeg?auto=compress&cs=tinysrgb&w=300','Reduces dark circles &amp; puffiness','btn-p-5','btn-h-3')">Add to Cart</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Modal -->
+      <div class="mbg" id="fmod">
+        <div class="ms">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+            <div style="font-weight:800;font-size:17px;color:#1e1b2e">Filters</div>
+            <div onclick="closeF()" style="cursor:pointer;width:30px;height:30px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+          <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:8px">Price Range</div>
+          <div class="fg" style="margin-bottom:14px">
+            <button class="fc off" onclick="fchip(this)">Under ₹500</button>
+            <button class="fc off" onclick="fchip(this)">₹500 – ₹1,000</button>
+            <button class="fc off" onclick="fchip(this)">₹1,000 – ₹2,000</button>
+            <button class="fc off" onclick="fchip(this)">Above ₹2,000</button>
+          </div>
+          <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:8px">Skin Type</div>
+          <div class="fg" style="margin-bottom:14px">
+            <button class="fc off" onclick="fchip(this)">Oily</button>
+            <button class="fc off" onclick="fchip(this)">Dry</button>
+            <button class="fc off" onclick="fchip(this)">Combination</button>
+            <button class="fc off" onclick="fchip(this)">Normal</button>
+          </div>
+          <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:8px">Category</div>
+          <div class="fg" style="margin-bottom:20px">
+            <button class="fc off" onclick="fchip(this)">Serum</button>
+            <button class="fc off" onclick="fchip(this)">Moisturizer</button>
+            <button class="fc off" onclick="fchip(this)">Cleanser</button>
+            <button class="fc off" onclick="fchip(this)">Eye Care</button>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="bout" style="border-radius:12px;padding:12px;font-size:13px" onclick="clearF()">Clear All</button>
+            <button class="bplg" style="border-radius:12px;padding:12px;font-size:13px" onclick="closeF()">Apply Filters</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bnav">
+        <button class="nb" onclick="goTo('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+        <button class="nb on"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></button>
+        <button class="nb"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Wishlist</span></button>
+        <button class="nb" onclick="goTo('cart')">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-badge" id="nav-badge-products"></span>
+          <span>Cart</span>
+        </button>
+        <button class="nb"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+      </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━ PRODUCT DETAIL ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen" id="s-detail">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hw">
+        <div class="ic icd" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="htd">Product Details</div>
+        <div style="display:flex;gap:14px">
+          <div class="ic icd"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="ic icd" onclick="goTo('cart')" style="position:relative">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="hbadge" id="hbadge-detail"></span>
+          </div>
+        </div>
+      </div>
+      <div class="scroll" style="flex:1">
+        <div style="position:relative;overflow:hidden;background:#f5f5f5">
+          <img src="https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Niacinamide Serum" style="width:100%;height:260px;object-fit:cover;display:block"/>
+          <span style="position:absolute;top:14px;left:14px;background:#EC4899;color:#fff;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:800">30% OFF</span>
+        </div>
+        <div style="padding:16px 18px">
+          <div style="color:#b0b0b0;font-size:11px;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">The Ordinary</div>
+          <h1 style="font-weight:800;font-size:19px;color:#1e1b2e;margin-bottom:8px;line-height:1.3">Niacinamide 10% + Zinc 1% Serum</h1>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+            <span style="color:#f59e0b">★★★★½</span>
+            <span style="font-weight:700;font-size:13px;color:#1e1b2e">4.5</span>
+            <span style="color:#b0b0b0;font-size:12px">(2,847 reviews)</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px">
+            <span style="color:#7E22CE;font-weight:800;font-size:24px">₹419</span>
+            <span style="color:#c8c8c8;font-size:15px;text-decoration:line-through">₹599</span>
+            <span style="color:#10b981;font-weight:700;font-size:13px">You save ₹180</span>
+          </div>
+          <div class="ibox" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span>✨</span><span style="color:#7E22CE;font-weight:700;font-size:13px">Why This Suits You</span></div>
+            <p style="color:#1e1b2e;font-size:13px;line-height:1.6">Perfect for <strong>oily skin</strong>. Controls excess sebum, visibly reduces pores, and targets <strong>acne &amp; blemishes</strong> — within your budget.</p>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-weight:700;font-size:14px;color:#1e1b2e;margin-bottom:6px">About This Product</div>
+            <p style="color:#6b7280;font-size:13px;line-height:1.65">A high-strength Vitamin B3 formula that visibly improves enlarged pores, uneven skin tone, and surface congestion over time.</p>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-weight:700;font-size:14px;color:#1e1b2e;margin-bottom:10px">Key Benefits</div>
+            <div class="bfr"><div class="bck">✓</div><span style="color:#1e1b2e;font-size:13px;line-height:1.5">Visibly reduces enlarged pores</span></div>
+            <div class="bfr"><div class="bck">✓</div><span style="color:#1e1b2e;font-size:13px;line-height:1.5">Controls excess oil production</span></div>
+            <div class="bfr"><div class="bck">✓</div><span style="color:#1e1b2e;font-size:13px;line-height:1.5">Fades dark spots &amp; blemishes</span></div>
+            <div class="bfr"><div class="bck">✓</div><span style="color:#1e1b2e;font-size:13px;line-height:1.5">Strengthens the skin barrier</span></div>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-weight:700;font-size:14px;color:#1e1b2e;margin-bottom:6px">How to Use</div>
+            <p style="color:#6b7280;font-size:13px;line-height:1.65">Apply a few drops to your face morning and evening, before heavier creams. Avoid direct contact with eyes.</p>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-weight:700;font-size:14px;color:#1e1b2e;margin-bottom:8px">Key Ingredients</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span class="pill">Niacinamide 10%</span><span class="pill">Zinc PCA 1%</span><span class="pill">Hyaluronic Acid</span><span class="pill">Panthenol</span>
+            </div>
+          </div>
+          <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:16px">
+            <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:3px">Best Suited For</div>
+            <div style="color:#6b7280;font-size:13px">Oily, Combination &amp; Acne-prone skin</div>
+          </div>
+          <div style="border:1.5px solid #f0f0f0;border-radius:12px;padding:14px;margin-bottom:20px">
+            <div style="font-weight:700;font-size:14px;color:#1e1b2e;margin-bottom:8px">Customer Reviews</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="color:#f59e0b">★★★★½</span><span style="font-weight:700;font-size:13px">4.5 out of 5</span></div>
+            <div style="color:#b0b0b0;font-size:12px;margin-bottom:8px">2,847 verified purchases</div>
+            <button style="color:#7E22CE;font-weight:700;font-size:13px;background:none;border:none;cursor:pointer">Read All Reviews →</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 18px 16px;border-top:1.5px solid #f0f0f0;background:#fff;flex-shrink:0">
+        <!-- Detail page add to cart button -->
+        <button class="badd added-state" id="btn-detail" style="border-radius:14px;padding:15px;font-size:15px;font-weight:700;width:100%"
+          onclick="addToCart(event,'Niacinamide 10% Serum',419,599,'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=300','Reduces pores &amp; blemishes','btn-detail','btn-p-0')">✓ Already in Cart — Go to Cart</button>
+      </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ CART ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen" id="s-cart">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hp" style="height:56px">
+        <div class="ic" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ht" id="chdr">My Cart (1 item)</div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+      </div>
+
+      <!-- Dynamic cart items -->
+      <div class="scroll" style="flex:1;padding:14px 16px 0">
+        <div id="cart-items-list"></div>
+
+        <!-- Empty state (hidden when cart has items) -->
+        <div id="cart-empty" class="empty-cart" style="display:none">
+          <div style="font-size:48px;margin-bottom:12px">🛒</div>
+          <div style="font-weight:700;font-size:17px;color:#1e1b2e;margin-bottom:6px">Your cart is empty</div>
+          <div style="color:#b0b0b0;font-size:13px;margin-bottom:20px">Add products to get started</div>
+          <button class="bplg" style="width:180px" onclick="goTo('products')">Browse Products</button>
+        </div>
+
+        <!-- Coupon (hidden when empty) -->
+        <div id="cart-coupon" style="background:linear-gradient(90deg,#7E22CE,#EC4899);border-radius:12px;padding:14px 16px;margin-bottom:14px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="color:#fff;font-weight:700;font-size:13px;margin-bottom:2px">🎁 Apply Coupon Code</div>
+              <div style="color:rgba(255,255,255,.88);font-size:12px">Save up to ₹200 on this order</div>
+            </div>
+            <div style="color:rgba(255,255,255,.7);font-size:22px">›</div>
+          </div>
+        </div>
+
+        <!-- Price summary (hidden when empty) -->
+        <div id="cart-summary" style="background:#faf5ff;border-radius:14px;padding:16px;border:1.5px solid #e9d5ff;margin-bottom:10px">
+          <div style="font-weight:800;font-size:14px;color:#1e1b2e;margin-bottom:12px">Price Details</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Subtotal (<span id="s-item-count">1</span> item)</span><span id="s-subtotal" style="color:#1e1b2e;font-weight:500">₹419</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Discount</span><span id="s-discount" style="color:#10b981;font-weight:600">− ₹180</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Delivery</span><span style="color:#10b981;font-weight:700">FREE ✓</span></div>
+          <div style="border-top:1.5px solid #e9d5ff;padding-top:10px;display:flex;justify-content:space-between">
+            <span style="font-weight:700;font-size:14px;color:#1e1b2e">Total Amount</span>
+            <span id="s-total" style="font-weight:800;font-size:17px;color:#7E22CE">₹419</span>
+          </div>
+        </div>
+        <div id="cart-savings-msg" style="text-align:center;color:#10b981;font-weight:600;font-size:13px;margin-bottom:14px"></div>
+        <div style="height:8px"></div>
+      </div>
+
+      <div id="cart-checkout-bar" style="padding:12px 16px 16px;border-top:1.5px solid #f0f0f0;background:#fff;flex-shrink:0">
+        <button class="bplg" id="checkout-btn" onclick="goTo('checkout')">Proceed to Checkout →</button>
+        <div style="text-align:center;color:#b0b0b0;font-size:12px;margin-top:8px">💳 100% Secure Payment</div>
+      </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ CHECKOUT ━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="screen" id="s-checkout">
+      <div class="notch"><div class="npill"></div></div>
+      <div class="hp" style="height:56px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="ic" onclick="goBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="ht">Checkout</div>
+        </div>
+        <div></div>
+      </div>
+      <div class="scroll" style="flex:1;padding:14px 16px 0">
+        <div style="border:1.5px solid #ebebeb;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="step-dot">1</div>
+              <div style="font-weight:700;font-size:13px;color:#1e1b2e">Delivery Address</div>
+            </div>
+            <button style="color:#7E22CE;font-size:12px;font-weight:700;background:none;border:none;cursor:pointer">Change</button>
+          </div>
+          <div style="padding-left:32px">
+            <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:4px">Priya Sharma</div>
+            <div style="color:#6b7280;font-size:12px;line-height:1.75">A-204, Green Valley Apartments<br/>Sector 12, Mumbai – 400001<br/>📞 +91 98765 43210</div>
+          </div>
+        </div>
+
+        <!-- Dynamic checkout order summary -->
+        <div style="border:1.5px solid #ebebeb;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div class="step-dot">2</div>
+            <div style="font-weight:700;font-size:13px;color:#1e1b2e">Order Summary (<span id="co-count">1</span> item)</div>
+          </div>
+          <div id="co-items" style="padding-left:32px"></div>
+        </div>
+
+        <div style="border:1.5px solid #ebebeb;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div class="step-dot">3</div>
+            <div style="font-weight:700;font-size:13px;color:#1e1b2e">Payment Method</div>
+          </div>
+          <div style="padding-left:32px">
+            <div class="pwr" onclick="spay('upi')">
+              <div class="pr on" id="r-upi"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:11px;height:11px"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div><div style="font-weight:700;font-size:13px;color:#1e1b2e">UPI Payment</div><div style="color:#10b981;font-size:11px;font-weight:500">💰 Get ₹50 cashback • GPay, PhonePe, Paytm</div></div>
+            </div>
+            <div class="pwr" onclick="spay('card')">
+              <div class="pr off" id="r-card"></div>
+              <div style="font-weight:700;font-size:13px;color:#1e1b2e">Credit / Debit Card</div>
+            </div>
+            <div class="pwr" onclick="spay('cod')">
+              <div class="pr off" id="r-cod"></div>
+              <div><div style="font-weight:700;font-size:13px;color:#1e1b2e">Cash on Delivery</div><div style="color:#b0b0b0;font-size:11px">₹20 handling charge applicable</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="font-weight:800;font-size:14px;color:#1e1b2e;margin-bottom:12px">Price Summary</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Subtotal</span><span id="co-sub" style="color:#1e1b2e;font-weight:500">₹419</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Discount</span><span id="co-disc" style="color:#10b981;font-weight:700">− ₹180</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span style="color:#6b7280">Delivery</span><span style="color:#10b981;font-weight:700">FREE ✓</span></div>
+          <div style="border-top:1.5px solid #e9d5ff;padding-top:10px;display:flex;justify-content:space-between">
+            <span style="font-weight:700;font-size:14px;color:#1e1b2e">Total Payable</span>
+            <span id="co-total" style="font-weight:800;font-size:18px;color:#7E22CE">₹419</span>
+          </div>
+        </div>
+
+        <div id="upromo" style="background:linear-gradient(90deg,#fef9c3,#fde68a);border:1.5px solid #fcd34d;border-radius:12px;padding:12px;text-align:center;margin-bottom:14px">
+          <span style="color:#92400e;font-weight:700;font-size:13px">🎉 You'll receive ₹50 UPI cashback on this order!</span>
+        </div>
+        <div style="height:8px"></div>
+      </div>
+      <div style="padding:12px 16px 16px;border-top:1.5px solid #f0f0f0;background:#fff;flex-shrink:0">
+        <button class="bplg" id="place-btn" onclick="placeOrder()">Place Order • ₹419</button>
+        <div style="text-align:center;color:#b0b0b0;font-size:11px;margin-top:8px">By placing this order you agree to our Terms &amp; Conditions</div>
+      </div>
+    </div>
+
+  </div><!-- end .phone -->
+</div>
+
+<script>
+// ─────────────────────────── CART STATE ───────────────────────────────────
+// id, name, price, origPrice, img, desc
+const cart = [
+  {
+    id: 'Niacinamide 10% Serum',
+    name: 'Niacinamide 10% Serum',
+    price: 419,
+    orig: 599,
+    img: 'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=300',
+    desc: 'Reduces pores & blemishes',
+    qty: 1
+  }
+];
+
+// track which button ids link to which product id
+// btnIds mapped per product id
+const btnMap = {}; // productId -> [btnId, ...]
+
+function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
+
+function cartTotal() { return cart.reduce((s,i) => s + i.price * i.qty, 0); }
+function cartOrig()  { return cart.reduce((s,i) => s + i.orig  * i.qty, 0); }
+function cartCount() { return cart.reduce((s,i) => s + i.qty, 0); }
+function cartSavings(){ return cartOrig() - cartTotal(); }
+
+// ─── RENDER CART ───────────────────────────────────────────────────────────
+function renderCart() {
+  const list = document.getElementById('cart-items-list');
+  const empty = document.getElementById('cart-empty');
+  const coupon = document.getElementById('cart-coupon');
+  const summary = document.getElementById('cart-summary');
+  const savingsMsg = document.getElementById('cart-savings-msg');
+  const checkoutBar = document.getElementById('cart-checkout-bar');
+
+  const isEmpty = cart.length === 0;
+  empty.style.display = isEmpty ? 'flex' : 'none';
+  coupon.style.display = isEmpty ? 'none' : 'block';
+  summary.style.display = isEmpty ? 'none' : 'block';
+  savingsMsg.style.display = isEmpty ? 'none' : 'block';
+  checkoutBar.style.display = isEmpty ? 'none' : 'block';
+
+  // render items
+  list.innerHTML = cart.map((item, idx) => `
+    <div class="cr" style="margin-bottom:10px" id="cart-row-${idx}">
+      <img src="${item.img}" alt="${item.name}"/>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:#1e1b2e;margin-bottom:3px">${item.name}</div>
+          <div style="color:#b0b0b0;font-size:12px;margin-bottom:5px">${item.desc}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:#7E22CE;font-weight:800;font-size:15px">${fmt(item.price)}</span>
+            <span style="color:#c8c8c8;font-size:12px;text-decoration:line-through">${fmt(item.orig)}</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <div class="qc">
+            <button class="qb" onclick="cartQty(${idx},-1)">
+              <svg viewBox="0 0 24 24" fill="none"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <span class="qn">${item.qty}</span>
+            <button class="qb" onclick="cartQty(${idx},1)">
+              <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <button onclick="removeFromCart(${idx})" style="color:#EC4899;font-size:12px;font-weight:600;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="1.8" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // update summary numbers
+  const tot = cartTotal();
+  const cnt = cartCount();
+  const disc = cartSavings();
+  document.getElementById('s-item-count').textContent = cnt;
+  document.getElementById('s-subtotal').textContent = fmt(tot);
+  document.getElementById('s-discount').textContent = '− ' + fmt(disc);
+  document.getElementById('s-total').textContent = fmt(tot);
+  savingsMsg.textContent = disc > 0 ? `🎉 You're saving ${fmt(disc)} on this order!` : '';
+
+  // header
+  document.getElementById('chdr').textContent = `My Cart (${cnt} item${cnt !== 1 ? 's' : ''})`;
+
+  // update badges everywhere
+  updateBadges();
+
+  // update checkout page too
+  renderCheckout();
+}
+
+// ─── BADGES ────────────────────────────────────────────────────────────────
+function updateBadges() {
+  const cnt = cartCount();
+  const show = cnt > 0;
+  const txt = cnt > 9 ? '9+' : String(cnt);
+
+  // nav badges
+  ['nav-badge-home','nav-badge-products'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = txt;
+    el.className = 'cart-badge' + (show ? ' visible' : '');
+  });
+
+  // header badges
+  ['hbadge-home','hbadge-products','hbadge-detail'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = txt;
+    el.className = 'hbadge' + (show ? ' v' : '');
+  });
+}
+
+// ─── RENDER CHECKOUT ───────────────────────────────────────────────────────
+function renderCheckout() {
+  const tot = cartTotal();
+  const disc = cartSavings();
+  const cnt = cartCount();
+
+  document.getElementById('co-count').textContent = cnt;
+  document.getElementById('co-sub').textContent = fmt(tot);
+  document.getElementById('co-disc').textContent = '− ' + fmt(disc);
+  document.getElementById('co-total').textContent = fmt(tot);
+  document.getElementById('place-btn').textContent = `Place Order • ${fmt(tot)}`;
+
+  document.getElementById('co-items').innerHTML = cart.map((item, i) => `
+    <div style="display:flex;gap:10px;${i < cart.length-1 ? 'padding-bottom:12px;border-bottom:1px solid #f3f4f6;margin-bottom:12px' : ''}">
+      <img src="${item.img}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f5f5f5"/>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:12.5px;color:#1e1b2e;margin-bottom:4px">${item.name}</div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:#7E22CE;font-weight:700;font-size:13px">${fmt(item.price)}</span>
+          <span style="color:#b0b0b0;font-size:12px">Qty: ${item.qty}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── ADD TO CART ───────────────────────────────────────────────────────────
+function addToCart(e, name, price, orig, img, desc, ...btnIds) {
+  e.stopPropagation();
+
+  // If already in cart — go to cart
+  const existing = cart.find(i => i.id === name);
+  if (existing) {
+    goTo('cart');
+    return;
+  }
+
+  // Add new item
+  cart.push({ id: name, name, price, orig, img, desc, qty: 1 });
+
+  // Update all linked buttons to "added" state
+  btnIds.forEach(bid => {
+    if (!bid) return;
+    const btn = document.getElementById(bid);
+    if (btn) {
+      btn.className = 'badd added-state';
+      btn.textContent = '✓ In Cart';
+    }
+  });
+
+  // Detail page button special label
+  if (name === 'Niacinamide 10% Serum') {
+    const db = document.getElementById('btn-detail');
+    if (db) { db.className = 'badd added-state'; db.textContent = '✓ Already in Cart — Go to Cart'; }
+  }
+
+  renderCart();
+  showToast('🛒 ' + name + ' added to cart!');
+}
+
+// ─── REMOVE FROM CART ──────────────────────────────────────────────────────
+function removeFromCart(idx) {
+  const item = cart[idx];
+  const removedName = item.id;
+
+  cart.splice(idx, 1);
+
+  // Reset all buttons for this product to "Add to Cart"
+  document.querySelectorAll('.badd').forEach(btn => {
+    // find buttons that had this product via onclick attr
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(removedName.replace(/'/g,"\\'"))) {
+      btn.className = 'badd add-state';
+      btn.textContent = 'Add to Cart';
+    }
+  });
+
+  // Also check by scanning all buttons
+  document.querySelectorAll('.badd.added-state').forEach(btn => {
+    const oc = btn.getAttribute('onclick') || '';
+    if (oc.includes("'" + removedName + "'")) {
+      btn.className = 'badd add-state';
+      btn.textContent = 'Add to Cart';
+    }
+  });
+
+  renderCart();
+  showToast('Item removed from cart');
+}
+
+// ─── CART QTY ──────────────────────────────────────────────────────────────
+function cartQty(idx, d) {
+  cart[idx].qty = Math.max(1, cart[idx].qty + d);
+  renderCart();
+}
+
+// ─── ROUTING ───────────────────────────────────────────────────────────────
+const hist = ['home'];
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  if (hist[hist.length-1] !== id) hist.push(id);
+  if (id === 'quiz') initQ();
+  if (id === 'cart') renderCart();
+  if (id === 'checkout') renderCheckout();
+}
+function goBack() {
+  if (hist.length > 1) { hist.pop(); const p = hist[hist.length-1]; hist.pop(); goTo(p); }
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+let tid;
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(tid); tid = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ─── HEART ─────────────────────────────────────────────────────────────────
+function hrt(el, e) {
+  e.stopPropagation();
+  el.classList.toggle('liked');
+  showToast(el.classList.contains('liked') ? 'Added to Wishlist ♥' : 'Removed from Wishlist');
+}
+
+// ─── QUIZ ───────────────────────────────────────────────────────────────────
+const qd = [
+  { t:"What's your skin type?", s:"Helps us find the right products for your skin.",
+    o:[{e:'☀️',t:'Oily',d:'Shiny, large pores'},{e:'🌤',t:'Combination',d:'T-zone oily, cheeks dry'},{e:'❄️',t:'Dry',d:'Flaky, tight feeling'},{e:'✨',t:'Normal',d:'Well balanced'}]},
+  { t:"What's your main concern?", s:"We'll prioritise products that target this.",
+    o:[{e:'🔴',t:'Acne',d:'Breakouts & blemishes'},{e:'🌟',t:'Dullness',d:'Lack of radiance'},{e:'🎨',t:'Pigmentation',d:'Dark spots & uneven tone'},{e:'⏳',t:'Anti-aging',d:'Fine lines & wrinkles'}]},
+  { t:"What's your budget?", s:"We'll show you the best options in your range.",
+    o:[{e:'💚',t:'Under ₹500',d:'Budget-friendly'},{e:'💙',t:'₹500 – ₹1,000',d:'Mid-range essentials'},{e:'💜',t:'₹1,000 – ₹2,000',d:'Premium formulas'},{e:'💎',t:'Above ₹2,000',d:'Luxury skincare'}]}
+];
+let qstep=1, qsel=null;
+function initQ(){qstep=1;qsel=null;renderQ();}
+function renderQ(){
+  const q=qd[qstep-1];
+  document.getElementById('qttl').textContent=q.t;
+  document.getElementById('qsub').textContent=q.s;
+  document.getElementById('qstlbl').textContent='Step '+qstep+' of 3';
+  document.getElementById('qprog').innerHTML=[1,2,3].map(s=>`<div class="ps ${s<=qstep?'psd':'psp'}"></div>`).join('');
+  document.getElementById('qopts').innerHTML=q.o.map((o,i)=>`
+    <div class="qo uns" id="qo${i}" onclick="pickQ(${i})">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">${o.e}</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1e1b2e" class="qot">${o.t}</div>
+          <div style="font-size:12px;color:#9ca3af" class="qod">${o.d}</div>
+        </div>
+      </div>
+      <div class="qrd" id="qrd${i}"></div>
+    </div>`).join('');
+  syncQ();
+}
+function pickQ(i){
+  qsel=i;
+  document.querySelectorAll('#qopts .qo').forEach((el,idx)=>{
+    el.className='qo '+(idx===i?'sel':'uns');
+    el.querySelector('.qot').style.color=idx===i?'#fff':'#1e1b2e';
+    el.querySelector('.qod').style.color=idx===i?'rgba(255,255,255,.8)':'#9ca3af';
+    el.querySelector('.qrd').innerHTML=idx===i?'<div class="qdot"></div>':'';
+  });
+  syncQ();
+}
+function syncQ(){
+  const b=document.getElementById('qnxt'),r=qsel!==null,last=qstep===3;
+  b.disabled=!r;b.textContent=last?'Show My Results':'Next →';
+  b.style.background=r?'#EC4899':'#f3f4f6';
+  b.style.color=r?'#fff':'#c8c8c8';
+  b.style.cursor=r?'pointer':'not-allowed';
+}
+function qnext(){
+  if(qsel===null)return;
+  if(qstep<3){qstep++;qsel=null;renderQ();}
+  else{showToast('✨ Personalised picks ready!');goTo('products');}
+}
+
+// ─── FILTER ─────────────────────────────────────────────────────────────────
+function openF(){document.getElementById('fmod').classList.add('open')}
+function closeF(){document.getElementById('fmod').classList.remove('open')}
+function fchip(b){b.className='fc '+(b.className.includes(' on')?'off':'on')}
+function clearF(){document.querySelectorAll('.fc').forEach(c=>c.className='fc off')}
+
+// ─── SORT ───────────────────────────────────────────────────────────────────
+let si=0;const sl=['Sort: Relevance','Sort: Price ↑','Sort: Price ↓','Sort: Rating'];
+function cycleSort(){si=(si+1)%sl.length;document.getElementById('srttxt').textContent=sl[si];}
+
+// ─── PAYMENT ────────────────────────────────────────────────────────────────
+function spay(t){
+  ['upi','card','cod'].forEach(p=>{
+    const el=document.getElementById('r-'+p);
+    el.className='pr '+(p===t?'on':'off');
+    el.innerHTML=p===t?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:11px;height:11px"><polyline points="20 6 9 17 4 12"/></svg>':'';
+  });
+  document.getElementById('upromo').style.display=t==='upi'?'block':'none';
+}
+
+// ─── ORDER ──────────────────────────────────────────────────────────────────
+function placeOrder(){
+  showToast('🎉 Order placed successfully!');
+  // Clear cart after order
+  setTimeout(()=>{
+    cart.length = 0;
+    // Reset all add to cart buttons
+    document.querySelectorAll('.badd').forEach(btn => {
+      if(!btn.id.includes('detail')){
+        btn.className='badd add-state';
+        btn.textContent='Add to Cart';
+      }
+    });
+    document.getElementById('btn-detail').className='badd add-state';
+    document.getElementById('btn-detail').textContent='Add to Cart — ₹419';
+    renderCart();
+    updateBadges();
+    goTo('home');
+  }, 2400);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+// Render initial state with the default item
+renderCart();
+updateBadges();
+</script>
+</body>
+</html>
