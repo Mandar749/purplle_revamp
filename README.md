@@ -3,7 +3,7 @@
 UI/UX redesign project for Purplle.com comparing two prototype approaches.
 
 ## Live Prototypes
-- [Prototype A](./purplle_prototype_A_final.html)
+- [Prototype A](./purplle_prototype_a.html)
 - [Prototype B](./purplle_prototype_b.html)
 
 ## Project Brief
